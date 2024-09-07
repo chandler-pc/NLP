@@ -1,3 +1,5 @@
+#https://github.com/chandler-pc/NLP/blob/main/Prueba_Entrada.py
+
 import re
 
 tokens = {}
@@ -130,3 +132,9 @@ for token in tokens.values():
     print(token.splits) # print the last split of the token
 
 print(editDist("London", "Londinium")) # check the edit distance
+
+# References
+# https://towardsdatascience.com/byte-pair-encoding-subword-based-tokenization-algorithm-77828a70bee0
+# https://huggingface.co/learn/nlp-course/en/chapter6/5
+# https://www.geeksforgeeks.org/byte-pair-encoding-bpe-in-nlp/
+# https://www.geeksforgeeks.org/edit-distance-dp-5/
