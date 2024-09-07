@@ -1,5 +1,3 @@
-#https://github.com/chandler-pc/NLP/blob/main/Prueba_Entrada.py
-
 import re
 
 tokens = {}
@@ -104,7 +102,7 @@ def byte_pair_encoding(number_of_repetitions):
         used_pairs.add(most_common)
         counter += 1
 
-# Function to find the edit distance with recursion
+# Function to find the edit distance with recursion, extracted from GeeksforGeeks
 def editDist(s1,s2):
     def editDistRec(s1,s2,m,n):
         # if the first string is empty then return the diference length of the another string
@@ -134,7 +132,7 @@ for token in tokens.values():
 print(editDist("London", "Londinium")) # check the edit distance
 
 # References
-# https://towardsdatascience.com/byte-pair-encoding-subword-based-tokenization-algorithm-77828a70bee0
 # https://huggingface.co/learn/nlp-course/en/chapter6/5
+# https://towardsdatascience.com/byte-pair-encoding-subword-based-tokenization-algorithm-77828a70bee0
 # https://www.geeksforgeeks.org/byte-pair-encoding-bpe-in-nlp/
 # https://www.geeksforgeeks.org/edit-distance-dp-5/
