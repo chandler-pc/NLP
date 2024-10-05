@@ -4,21 +4,8 @@ from levenshtein import get_suggestions, dictionary
 
 def normalize_text(text):
     text = text.lower().strip()
-    text = text.replace(".", " ")
-    text = text.replace(",", " ")
-    text = text.replace(";", " ")
-    text = text.replace(":", " ")
-    text = text.replace("!", " ")
-    text = text.replace("?", " ")
-    text = text.replace("(", " ")
-    text = text.replace(")", " ")
-    text = text.replace("[", " ")
-    text = text.replace("]", " ")
-    text = text.replace("{", " ")
-    text = text.replace("}", " ")
-    text = text.replace("'", " ")
-    text = text.replace('"', " ")
-    text = text.replace("  ", " ")
+    for i in string.punctuation:
+        text = text.replace(i, " ")
     text = text.lower().strip()
     return text
 
