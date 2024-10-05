@@ -1,9 +1,9 @@
 from ngram import NgramModelWithBackoff
-import os
 import pickle
 import string
+import os
 
-corpus = []
+corpus = [] # Open American National Corpus
 for textfile in os.listdir('./corpus'):
     with open(f'./corpus/{textfile}', 'r', encoding="utf8") as file:
         file = file.read().replace("\n", " ")
