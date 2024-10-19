@@ -1,5 +1,6 @@
 import pickle
 from ngram import NgramModelWithBackoff
+import string
 from levenshtein import get_suggestions, dictionary
 
 def normalize_text(text):
@@ -28,7 +29,7 @@ def get_prob_suggestion(context, suggestions, ngram_model):
 with open('ngram_model_backoff.pkl', 'rb') as file:
     ngram_model_backoff = pickle.load(file)
 
-text = 'oscar, are going to the besch'
+text = 'komi is a koalaz'
 text = normalize_text(text)
 words = text.split()
 
