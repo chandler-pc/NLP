@@ -18,6 +18,8 @@ En esta segunda entrega, se han realizado mejoras significativas en la interfaz 
 
 * Barra lateral: Se ha actualizado la barra de chats de forma responsiva.
 
+* Implementación de la API en tiempo real: Ahora se habilitó la creación de chats que usan la implementación de websocket de OpenAI para tener respuestas en menor tiempo conforme el modelo las procese.
+
 ## Estructura del Proyecto
 * src/components/: Contiene los componentes clave de la interfaz de usuario.
 * src/pages/: Páginas principales de la aplicación (login, chats, historial, etc.).

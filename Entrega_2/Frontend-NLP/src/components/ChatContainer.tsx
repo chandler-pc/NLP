@@ -16,11 +16,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ selectedModel, set
 
     return (
         <div className='flex flex-col'>
-            <div className="flex justify-between items-center mb-4 h-auto">
+            <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Chat</h2>
                 <ModelSelector selectedModel={selectedModel} onSelectModel={setSelectedModel} />
             </div>
-            <div className='flex-grow'>
+            <div className=''>
                 <ChatMessages messages={messages} username={username} />
                 <ChatInput onSendMessage={handleSendMessage} />
             </div>

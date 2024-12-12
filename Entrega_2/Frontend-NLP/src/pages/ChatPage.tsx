@@ -79,7 +79,7 @@ const ChatPage: React.FC = () => {
         onCreateChat={handleCreateNewChat}
         onLogout={logout}
       />
-        <Tabs defaultValue="chat" className='flex-1 p-4 flex flex-col'>
+        <Tabs defaultValue="chat" className='w-full p-4 flex flex-col'>
           <TabsList className=''>
             <TabsTrigger value="chat">Chat</TabsTrigger>
             <TabsTrigger value="draw">Draw</TabsTrigger>
