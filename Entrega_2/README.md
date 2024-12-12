@@ -20,6 +20,8 @@ En esta segunda entrega, se han realizado mejoras significativas en la interfaz 
 
 * Implementación de la API en tiempo real: Ahora se habilitó la creación de chats que usan la implementación de websocket de OpenAI para tener respuestas en menor tiempo conforme el modelo las procese.
 
+* Generación de imágenes con Dall-3: Agregado apartado para hacer uso de la API de DALL-3 para generar imágenes.
+
 ## Estructura del Proyecto
 * src/components/: Contiene los componentes clave de la interfaz de usuario.
 * src/pages/: Páginas principales de la aplicación (login, chats, historial, etc.).
