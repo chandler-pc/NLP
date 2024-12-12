@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
+import { Checkbox } from "./ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -13,15 +14,15 @@ import {
 interface CreateChatModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (chatName: string) => void;
+  onConfirm: (chatName: string,isChatRealtime: boolean) => void;
 }
 
 export const CreateChatModal: React.FC<CreateChatModalProps> = ({ isOpen, onClose, onConfirm }) => {
   const [chatName, setChatName] = useState('');
 
-  const handleConfirm = () => {
+  const handleConfirm = (isChatRealtime: boolean) => {
     if (chatName.trim()) {
-      onConfirm(chatName.trim());
+      onConfirm(chatName.trim(), isChatRealtime);
       setChatName('');
       onClose();
     }
@@ -43,7 +44,8 @@ export const CreateChatModal: React.FC<CreateChatModalProps> = ({ isOpen, onClos
         />
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleConfirm} disabled={!chatName.trim()}>Crear</Button>
+          <Button onClick={() => handleConfirm(false)} disabled={!chatName.trim()}>Crear</Button>
+          <Button onClick={() => handleConfirm(true)} disabled={!chatName.trim()}>Crear realtime</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

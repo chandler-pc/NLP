@@ -2,6 +2,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import DotenvWebpack from 'dotenv-webpack';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -35,12 +36,13 @@ export default {
     ],
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js'],
+    extensions: ['.ts', '.tsx', '.js']
   },
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
     }),
+    new DotenvWebpack(),
   ],
   devServer: {
     static: {
@@ -48,5 +50,6 @@ export default {
     },
     hot: true,
     open: true,
+    allowedHosts: "all"
   },
 };

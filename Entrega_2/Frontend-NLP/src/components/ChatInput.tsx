@@ -31,7 +31,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
         placeholder="Escribe un mensaje..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        onKeyPress={handleKeyPress}
+        onKeyDown={handleKeyPress}
         className="flex-1"
       />
       <Button 

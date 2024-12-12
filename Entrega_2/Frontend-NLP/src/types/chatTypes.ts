@@ -25,6 +25,6 @@ export interface ChatListProps {
     currentChatId: string;
     onSelectChat: (chatId: string) => void;
     socket: any;
-    onCreateChat: (newChatName: string) => void;
+    onCreateChat: (newChatName: string, isChatRealtime: boolean) => void;
     onLogout: () => void;
 }

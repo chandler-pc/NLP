@@ -6,6 +6,8 @@ const sessionSchema = new Schema({
     updatedAt: { type: Date, default: Date.now },
     name: { type: String, default: '' ,required: true },
     summary: { type: String, default: '' },
+    isChatRealtime: { type: Boolean, default: false },
+    wsId: { type: String, default: '' },
 });
 
 export default model('Session', sessionSchema);

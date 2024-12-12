@@ -1,8 +1,12 @@
 import Session from '../models/Session.js';
 import Message from '../models/Message.js';
 import { OpenAI } from 'openai';
+import WebSocket from 'ws';
+import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY }); // Creación de instancia de OpenAI
+
+const wsMap = new Map();
 
 /**
  * Maneja los eventos de WebSocket para un cliente conectado.
@@ -51,10 +55,50 @@ export const handleWebSocket = (socket) => {
      * @param {string} data.name - Nombre del nuevo chat.
      * @param {Function} callback - Función de devolución de llamada para enviar el chat creado.
      */
-    socket.on('createChat', async ({ name }, callback) => {
+    socket.on('createChat', async ({ name, isChatRealtime }, callback) => {
         try {
             const userId = socket.user.id;
-            const newChat = await Session.create({ userId, name });
+            const newChat = await Session.create({ userId, name, isChatRealtime });
+            if (isChatRealtime) {
+                const wsId = uuidv4();
+                const url = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01";
+                const ws = new WebSocket(url, {
+                    headers: {
+                        "Authorization": "Bearer " + process.env.OPENAI_API_KEY,
+                        "OpenAI-Beta": "realtime=v1",
+                    },
+                });
+                ws.on("open", function open() {
+                    ws.send(JSON.stringify({
+                        type: "response.create",
+                        response: {
+                            modalities: ["text"],
+                            instructions: "Eres un chatbot",
+                        }
+                    }));
+                });
+
+                ws.on("message", async function incoming(message) {
+                    try {
+                        const parsedMessage = JSON.parse(message);
+
+                        if (parsedMessage['type'] === 'response.text.done') {
+                            console.log('Mensaje recibido del WebSocket:', parsedMessage['text']);
+                            await Message.create({ sessionId: newChat._id, role: 'gpt', content: parsedMessage['text'] });
+                            socket.emit('newMessage', {
+                                sessionId: newChat._id,
+                                role: 'gpt',
+                                content: parsedMessage['text'],
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error procesando el mensaje del WebSocket:', error);
+                    }
+                });
+                wsMap.set(wsId, ws);
+                console.log('WebSocket creado:', wsId);
+                await Session.updateOne({ _id: newChat._id }, { wsId });
+            }
             callback(newChat);
         } catch (err) {
             console.error('Error creando un nuevo chat:', err);
@@ -98,7 +142,7 @@ export const handleWebSocket = (socket) => {
      * @param {string} data.chatId - ID del chat al que pertenece el mensaje.
      * @param {string} data.content - Contenido del mensaje enviado por el usuario.
      */
-    socket.on('sendMessage', async ({ chatId, content }) => {
+    socket.on('sendMessage', async ({ chatId, content, model }) => {
         try {
             const userMessage = await Message.create({ sessionId: chatId, role: 'user', content });
             socket.emit('newMessage', userMessage);
@@ -106,33 +150,71 @@ export const handleWebSocket = (socket) => {
             const actualSession = await Session.findById(chatId);
             if (!actualSession) throw new Error('Sesión no encontrada.');
 
-            const response = await openai.chat.completions.create({
-                messages: [
-                    { role: 'system', content: 'Con este resumen' + actualSession.summary + ', contesta a lo siguiente' },
-                    { role: 'user', content },
-                ],
-                model: 'gpt-4o-mini',
-            });
+            if (actualSession.isChatRealtime) {
+                const ws = wsMap.get(actualSession.wsId);
+                ws.send(JSON.stringify({
+                    type: "conversation.item.create",
+                    item: {
+                        type: 'message',
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'input_text',
+                                text: content,
+                            }
+                        ]
+                    }
+                }));
+                ws.send(JSON.stringify({ type: 'response.create' }));
+            } else {
+                const response = await openai.chat.completions.create({
+                    messages: [
+                        { role: 'system', content: 'Con este resumen' + actualSession.summary + ', contesta a lo siguiente' },
+                        { role: 'user', content },
+                    ],
+                    model: model,
+                });
 
-            const gptMessage = response.choices[0]?.message?.content;
-            if (!gptMessage) throw new Error('Respuesta de OpenAI no válida.');
+                const gptMessage = response.choices[0]?.message?.content;
+                if (!gptMessage) throw new Error('Respuesta de OpenAI no válida.');
 
-            const gptResponse = await Message.create({ sessionId: chatId, role: 'gpt', content: gptMessage });
-            socket.emit('newMessage', gptResponse);
+                const gptResponse = await Message.create({ sessionId: chatId, role: 'gpt', content: gptMessage });
+                socket.emit('newMessage', gptResponse);
 
-            const summaryResponse = await openai.chat.completions.create({
-                messages: [
-                    { role: 'system', content: 'A este resumen ' + actualSession.summary + ' agrega lo siguiente ' + 'Usuario:' + content + '\nGPT:' + gptMessage + ' \n y resumelo' },
-                ],
-                model: 'gpt-4o-mini',
-            });
 
-            const summaryMessage = summaryResponse.choices[0]?.message?.content;
-            if (!summaryMessage) throw new Error('Respuesta de OpenAI para el resumen no válida.');
+                const summaryResponse = await openai.chat.completions.create({
+                    messages: [
+                        { role: 'system', content: 'A este resumen ' + actualSession.summary + ' agrega lo siguiente ' + 'Usuario:' + content + '\nGPT:' + gptMessage + ' \n y resumelo' },
+                    ],
+                    model: 'gpt-4o-mini',
+                });
 
-            await Session.updateOne({ _id: chatId }, { summary: summaryMessage });
+                const summaryMessage = summaryResponse.choices[0]?.message?.content;
+                if (!summaryMessage) throw new Error('Respuesta de OpenAI para el resumen no válida.');
+
+                await Session.updateOne({ _id: chatId }, { summary: summaryMessage });
+            }
         } catch (err) {
             console.log(chatId);
+            console.error('Error enviando mensaje:', err);
+        }
+    });
+
+    socket.on('generateImage', async ({ prompt }) => {
+        try {
+            console.log('Generando imagen con el prompt', prompt);
+            const response = await openai.images.generate({
+                model: "dall-e-3",
+                prompt,
+                n: 1,
+                size: "1024x1024",
+            });
+
+            const imageUrl = response.data[0].url
+
+            socket.emit('imageGenerated', imageUrl);
+
+        } catch (err) {
             console.error('Error enviando mensaje:', err);
         }
     });

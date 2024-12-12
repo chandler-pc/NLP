@@ -8,6 +8,7 @@ interface UseSocketProps {
   onNewMessage: (message: Message) => void;
   onChatNameUpdated: (chatId: string, name: string) => void;
   onChatDeleted: (chatId: string) => void;
+  onImageGenerated: (imageUrl: string) => void;
   onError: (error: string) => void;
 }
 
@@ -17,13 +18,14 @@ export const useSocket = ({
   onNewMessage,
   onChatNameUpdated,
   onChatDeleted,
+  onImageGenerated,
   onError,
 }: UseSocketProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token') || '';
-    const newSocket = io('http://localhost:5000', {
+    const newSocket = io(process.env.REACT_APP_BACK_URL, {
       auth: { token },
     });
     console.log('Connecting to server');
@@ -57,6 +59,10 @@ export const useSocket = ({
       onError(error.message);
     });
 
+    newSocket.on('imageGenerated', (imageUrl: string) => {
+      onImageGenerated(imageUrl);
+    });
+
     return () => {
       newSocket.disconnect();
     };
@@ -66,13 +72,18 @@ export const useSocket = ({
     socket?.emit('getMessages', { chatId });
   };
 
-  const createChat = (name: string, callback: (chat: Chat) => void) => {
-    socket?.emit('createChat', { name }, callback);
+  const createChat = (name: string, isChatRealtime: boolean, callback: (chat: Chat) => void) => {
+    socket?.emit('createChat', { name, isChatRealtime }, callback);
   };
 
-  const sendMessage = (chatId: string, content: string) => {
-    socket?.emit('sendMessage', { chatId, content });
+  const sendMessage = (chatId: string, content: string, model: string) => {
+    socket?.emit('sendMessage', { chatId, content, model });
   };
 
-  return { socket, getMessages, createChat, sendMessage };
+  const generateImage = (prompt: string) => {
+    console.log('Generating image');
+    socket?.emit('generateImage', { prompt });
+  }
+
+  return { socket, getMessages, createChat, sendMessage, generateImage };
 };

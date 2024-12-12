@@ -1,13 +1,16 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
 import { useChat } from '../hooks/useChat';
 import { ChatList } from '../components/ChatList';
-import { ChatMessages } from '../components/ChatMessages';
-import { ChatInput } from '../components/ChatInput';
+import { DrawSection } from '../components/DrawSection';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { ChatContainer } from '../components/ChatContainer';
 
 const ChatPage: React.FC = () => {
   const { user, logout } = useContext(AuthContext)!;
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [imageUrl, setImageUrl] = useState('');
   const {
     chats,
     currentChatId,
@@ -20,7 +23,7 @@ const ChatPage: React.FC = () => {
     handleNewMessage
   } = useChat();
 
-  const { socket, getMessages, createChat, sendMessage } = useSocket({
+  const { socket, getMessages, createChat, sendMessage, generateImage } = useSocket({
     onChatsUpdate: (data) => {
       initializeChats(data);
     },
@@ -29,6 +32,10 @@ const ChatPage: React.FC = () => {
     onChatNameUpdated: handleChatNameUpdate,
     onChatDeleted: (chatId) => {
       handleChatDeleted(chatId);
+    },
+    onImageGenerated: (imageUrl) => {
+      console.log('Image generated', imageUrl);
+      setImageUrl(imageUrl);
     },
     onError: (error) => {
       console.error(error);
@@ -39,11 +46,11 @@ const ChatPage: React.FC = () => {
     if (currentChatId) {
       getMessages(currentChatId);
     }
-  }, [currentChatId, getMessages]);
+  }, [currentChatId]);
 
-  const handleCreateNewChat = (newChatName :string) => {
+  const handleCreateNewChat = (newChatName: string, isChatRealtime: boolean) => {
     if (newChatName) {
-      createChat(newChatName, (newChat) => {
+      createChat(newChatName, isChatRealtime, (newChat) => {
         initializeChats([...chats, newChat]);
         setCurrentChatId(newChat._id);
       });
@@ -51,17 +58,15 @@ const ChatPage: React.FC = () => {
   };
 
   const handleSendMessage = (msg: string) => {
-    console.log('Sending message:', msg);
-    console.log('Current chat:', currentChatId);
     if (!currentChatId) {
-      createChat('Nuevo Chat', (newChat) => {
+      createChat('Nuevo Chat', false, (newChat) => {
         initializeChats([...chats, newChat]);
         setCurrentChatId(newChat._id);
-        sendMessage(newChat._id, msg);
+        sendMessage(newChat._id, msg, selectedModel);
       });
       return;
     }
-    sendMessage(currentChatId, msg);
+    sendMessage(currentChatId, msg, selectedModel);
   };
 
   return (
@@ -74,14 +79,21 @@ const ChatPage: React.FC = () => {
         onCreateChat={handleCreateNewChat}
         onLogout={logout}
       />
-
-      <div className="flex-1 p-4 flex flex-col">
-        <h2 className="text-2xl font-bold mb-4 t text-right">Chat</h2>
-        <ChatMessages messages={messages} username={user?.username} />
-        <ChatInput onSendMessage={handleSendMessage} />
+        <Tabs defaultValue="chat" className='flex-1 p-4 flex flex-col'>
+          <TabsList className=''>
+            <TabsTrigger value="chat">Chat</TabsTrigger>
+            <TabsTrigger value="draw">Draw</TabsTrigger>
+          </TabsList>
+          <TabsContent value="chat">
+            <ChatContainer selectedModel={selectedModel} setSelectedModel={setSelectedModel} username={user?.username} messages={messages} handleSendMessage={handleSendMessage}/>
+          </TabsContent>
+          <TabsContent value="draw">
+            <DrawSection generateImage={generateImage} imageUrl={imageUrl}  />
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
   );
 };
 
 export default ChatPage;
+
