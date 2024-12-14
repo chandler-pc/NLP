@@ -6,6 +6,7 @@ import DotenvWebpack from 'dotenv-webpack';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/// <reference types="@webgpu/types" />
 export default {
   mode: 'development',
   entry: './src/index.tsx',

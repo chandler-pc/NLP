@@ -219,6 +219,29 @@ export const handleWebSocket = (socket) => {
         }
     });
 
+    socket.on('generateShader', async ({ prompt, shaderCode }) => {
+        try {
+            const response = await openai.chat.completions.create({
+                model: "gpt-4o",
+                messages: [
+                    {
+                        role: 'system', content: `Conoces la computación gráfica y la creación de Shaders para WebGL(NO DEBES USAR WHILE), 
+                actualmente tienes este shader: ${shaderCode} y debes agregarle
+                lo que el usuario necesite, debes dar la respuesta en formato JSON, de la forma 
+            {'shader': 'tu_shader'}, solo dame el JSON, ningún otro mensaje más` },
+            {
+                role: 'user', content: prompt,
+            }
+                ],
+            });
+            const shader = response.choices[0]?.message?.content;
+            socket.emit('shaderGenerated', shader);
+
+        } catch (err) {
+            console.error('Error generando shader:', err);
+        }
+    });
+
     /**
      * Maneja la desconexión del cliente.
      */

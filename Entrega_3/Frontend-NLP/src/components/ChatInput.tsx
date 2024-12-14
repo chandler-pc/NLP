@@ -4,9 +4,10 @@ import { Send } from 'lucide-react'
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
+  promptMessage?: string;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, promptMessage }) => {
   const [message, setMessage] = useState('');
 
   const handleSend = () => {
@@ -27,7 +28,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage }) => {
     <div className="flex items-start space-x-2 px-4 pb-2 bg-background">
       <textarea
         rows={1}
-        placeholder="Escribe un mensaje..."
+        placeholder={promptMessage}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyPress}

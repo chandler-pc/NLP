@@ -1,11 +1,12 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
 import { useChat } from '../hooks/useChat';
 import { ChatList } from '../components/ChatList';
 import { DrawSection } from '../components/DrawSection';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { ChatContainer } from '../components/ChatContainer';
+import { ShaderEditor } from '../components/ShaderEditor';
 
 const ChatPage: React.FC = () => {
   const { user, logout } = useContext(AuthContext)!;
@@ -23,6 +24,15 @@ const ChatPage: React.FC = () => {
     handleNewMessage
   } = useChat();
 
+
+  const [shaderCode, setShaderCode] = useState(`precision mediump float;
+  uniform float time;
+  varying vec2 vUv;
+  void main() {
+      vec3 color = vec3(0.5 + 0.5 * cos(time + vUv.xyx * 3.0));
+      gl_FragColor = vec4(color, 1.0);
+  }`);
+
   const { socket, getMessages, createChat, sendMessage, generateImage } = useSocket({
     onChatsUpdate: (data) => {
       initializeChats(data);
@@ -31,7 +41,7 @@ const ChatPage: React.FC = () => {
       handleMessagesUpdate(data);
     },
     onNewMessage: (data) => {
-      if(data.role === 'gpt'){
+      if (data.role === 'gpt') {
         console.log('Time received: ', new Date().getTime());
       }
       handleNewMessage(data);
@@ -46,6 +56,13 @@ const ChatPage: React.FC = () => {
     },
     onError: (error) => {
       console.error(error);
+    },
+    onShaderGenerated: (shader) => {   
+      shader = shader.replace(/`/g, '');
+      shader = shader.replace(/json/g, '');
+      console.log('Shader generated', shader); 
+      shader = JSON.parse(shader)['shader'];
+      setShaderCode(shader);
     }
   });
 
@@ -91,6 +108,7 @@ const ChatPage: React.FC = () => {
         <TabsList>
           <TabsTrigger value="chat">Chat</TabsTrigger>
           <TabsTrigger value="draw">Draw</TabsTrigger>
+          <TabsTrigger value="shader">Shader</TabsTrigger>
         </TabsList>
         <div className="flex-1 p-4 pb-0">
           <TabsContent value="chat">
@@ -102,8 +120,11 @@ const ChatPage: React.FC = () => {
               handleSendMessage={handleSendMessage}
             />
           </TabsContent>
-          <TabsContent value="draw" className="">
+          <TabsContent value="draw">
             <DrawSection generateImage={generateImage} imageUrl={imageUrl} />
+          </TabsContent>
+          <TabsContent value="shader">
+            <ShaderEditor socket={socket} shaderCode={shaderCode}/>
           </TabsContent>
         </div>
       </Tabs>
@@ -112,4 +133,3 @@ const ChatPage: React.FC = () => {
 };
 
 export default ChatPage;
-

@@ -32,7 +32,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             </div>
 
             <div className="bg-white p-4">
-                <ChatInput onSendMessage={handleSendMessage} />
+                <ChatInput onSendMessage={handleSendMessage} promptMessage="Escribe un mensaje..." />
             </div>
         </div>
     );

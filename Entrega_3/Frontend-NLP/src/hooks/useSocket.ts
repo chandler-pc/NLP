@@ -9,6 +9,7 @@ interface UseSocketProps {
   onChatNameUpdated: (chatId: string, name: string) => void;
   onChatDeleted: (chatId: string) => void;
   onImageGenerated: (imageUrl: string) => void;
+  onShaderGenerated: (shader: string) => void;
   onError: (error: string) => void;
 }
 
@@ -19,6 +20,7 @@ export const useSocket = ({
   onChatNameUpdated,
   onChatDeleted,
   onImageGenerated,
+  onShaderGenerated,
   onError,
 }: UseSocketProps) => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -61,6 +63,10 @@ export const useSocket = ({
 
     newSocket.on('imageGenerated', (imageUrl: string) => {
       onImageGenerated(imageUrl);
+    });
+
+    newSocket.on('shaderGenerated', (shader: string) => {
+      onShaderGenerated(shader);
     });
 
     return () => {

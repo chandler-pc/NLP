@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Checkbox } from "./ui/checkbox"
 import {
   Dialog,
   DialogContent,
